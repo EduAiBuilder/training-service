@@ -1,5 +1,5 @@
 import time
-from app.utils.sqs_handler.py import receive_messages, process_message
+from app.utils.sqs_handler import receive_messages, process_message
 
 def consume_sqs_messages():
     while True:
