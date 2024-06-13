@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  fastapi_sqs_app:
+    build: .
+    ports:
+      - "${APP_PORT:-8000}:${APP_PORT:-8000}"
+    environment:
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_REGION_NAME: ${AWS_REGION_NAME}
+      SQS_QUEUE_URL: ${SQS_QUEUE_URL}
+      APP_PORT: ${APP_PORT:-8000}
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:${APP_PORT:-8000}/sqs/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
