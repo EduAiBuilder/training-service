@@ -4,4 +4,4 @@ router = APIRouter()
 
 @router.get("/status")
 async def read_status():
-    return {"status": "SQS Consumer is running"}
+    return {"status": "App is runing"}
