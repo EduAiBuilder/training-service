@@ -6,4 +6,4 @@ def consume_sqs_messages():
         messages = receive_messages()
         for message in messages:
             process_message(message)
-        time.sleep(5)  # Adjust the interval as needed
+        time.sleep(30)
