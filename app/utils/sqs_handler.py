@@ -1,7 +1,7 @@
 import boto3
 from app.config import settings
+from app.models_trainer.models_trainer import train_model
 import json
-import httpx
 
 def get_sqs_client():
     return boto3.client(
@@ -15,20 +15,19 @@ def receive_messages():
     client = get_sqs_client()
     response = client.receive_message(
         QueueUrl=settings.sqs_queue_url,
-        MaxNumberOfMessages=10,
-        WaitTimeSeconds=10
+        MaxNumberOfMessages=1,
+        WaitTimeSeconds=20
     )
     return response.get('Messages', [])
 
-def process_message(message):
+async def process_message(message):
     # Implement your message processing logic here
     print(f"Processing message: {message['Body']}")
     try:
-        # Assuming the message body is JSON and contains a 'trainerId'
         body = json.loads(message['Body'])
         trainer_id = body.get('trainerId')
         if trainer_id:
-            fetch_trainer_data(trainer_id)
+            await train_model(trainer_id)
         else:
             print("trainerId not found in message")
     except Exception as e:
@@ -44,17 +43,4 @@ def delete_message(receipt_handle):
         ReceiptHandle=receipt_handle
     )
 
-def fetch_trainer_data(trainer_id):
-    try:
-        trainer_service_url = f"{settings.trainer_node_service_url}/trainers/{trainer_id}/images"
-        headers = {
-            "Authorization": f"Bearer {settings.jwt_token}"
-        }
-        response = httpx.get(trainer_service_url, headers=headers)
-        response.raise_for_status()
-        trainer_data = response.json()
-        print(f"Fetched trainer data: {trainer_data}")
-    except httpx.HTTPStatusError as e:
-        print(f"HTTP error while fetching trainer data: {e}")
-    except Exception as e:
-        print(f"Error fetching trainer data: {e}")
+
