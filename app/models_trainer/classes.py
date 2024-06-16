@@ -1,2 +1,6 @@
 class Trainer_message:
-    trainer_id: int
+    trainerId: int
+
+class Trainer_images_by_category_response:
+    imageUrl: list[str]
+    category: str
