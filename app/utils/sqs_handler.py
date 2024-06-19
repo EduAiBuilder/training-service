@@ -1,6 +1,6 @@
 import boto3
 from app.config import settings
-from app.models_trainer.models_trainer import train_model
+from app.models_trainer.models_trainer import main_training_process
 import json
 
 def get_sqs_client():
@@ -27,7 +27,7 @@ async def process_message(message):
         body = json.loads(message['Body'])
         trainer_id = body.get('trainerId')
         if trainer_id:
-            await train_model(trainer_id)
+            await main_training_process(trainer_id)
         else:
             print("trainerId not found in message")
     except Exception as e:

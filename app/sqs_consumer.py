@@ -6,4 +6,4 @@ async def consume_sqs_messages():
         messages = receive_messages()
         for message in messages:
             await process_message(message)
-        time.sleep(30)
+        time.sleep(5)
