@@ -3,13 +3,13 @@ import os
 from app.config import settings
 
 
-def upload_to_s3(trainer_id:int, export_path: str):
+def upload_to_s3(trainer_id:int, export_path: str, model_key: str):
     s3_client = boto3.client('s3',
                              aws_access_key_id=settings.aws_access_key_id,
         aws_secret_access_key=settings.aws_secret_access_key,
         region_name=settings.aws_region_name
                              )
-    s3_object_key = f'models/{trainer_id}.pkl'
+    s3_object_key = f'models/{trainer_id}/{model_key}.pkl'
 
     bucket = 'edu-ai-builder'
     try:

@@ -26,8 +26,10 @@ async def process_message(message):
     try:
         body = json.loads(message['Body'])
         trainer_id = body.get('trainerId')
+        model_id = body.get('modelId')
+        model_key = body.get('modelKey')
         if trainer_id:
-            await main_training_process(trainer_id)
+            await main_training_process(trainer_id,model_id,model_key)
         else:
             print("trainerId not found in message")
     except Exception as e:

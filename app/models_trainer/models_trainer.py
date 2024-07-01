@@ -1,18 +1,18 @@
 from .s3 import upload_to_s3
-from .trainer_client import fetch_trainer_data
+from .trainer_client import fetch_trainer_data, post_epoch_data
 from .classes import Trainer_images_by_category_response
 from .trainer_callback import ProgressCallback
 from fastbook import *
 from fastai.vision.all import *
 import io
 
-async def main_training_process(trainer_id: int):
+async def main_training_process(trainer_id: int, model_id: int, model_key: str):
     trainer_images: list[Trainer_images_by_category_response] = await fetch_trainer_data(trainer_id)
     path = save_images_by_category(trainer_id, trainer_images)
     dls = set_data_loaders(path)
-    export_path = f'app/models_trainer/export/{trainer_id}.pkl'
-    train_and_export_model(dls,export_path)
-    upload_to_s3(trainer_id,export_path)
+    export_path = f'app/models_trainer/export/{model_id}.pkl'
+    train_and_export_model(dls,export_path,model_id)
+    upload_to_s3(trainer_id, export_path, model_key)
 
 
 def save_images_by_category(trainer_id: str, trainer_images: list[Trainer_images_by_category_response]):
@@ -43,9 +43,25 @@ def set_data_loaders(path):
     print(f"Number of classes: {dls}")  # Check number of classes
     return dls
 
-def train_and_export_model(dls,export_path:str):
+async def train_and_export_model(dls, export_path: str, model_id: int):
     learn = vision_learner(dls, resnet18, metrics=error_rate)
-    learn.fine_tune(4)
+    learn.add_cb(SaveModelCallback(every_epoch=True, with_opt=True))
+    
+    for epoch in range(4):
+        learn.fine_tune(1)
+        metrics = learn.validate()
+        await send_epoch_data(model_id, epoch, metrics)
+    
     learn.export(export_path)
-    return
 
+async def send_epoch_data(model_id: str, epoch_number: int, metrics: list):
+    epoch_data = {
+        "epochNumber": epoch_number,
+        "lossValue": metrics[0].item(),
+        "accuracyValue": metrics[1].item(),
+        "valLossValue": metrics[2].item(),
+        "valAccuracyValue": metrics[3].item(),
+        "learningRate": 0.001,  
+        "timeElapsed": 0  
+    }
+    await post_epoch_data(epoch_data, model_id)
