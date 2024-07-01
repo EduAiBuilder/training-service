@@ -10,7 +10,7 @@ async def main_training_process(trainer_id: int, model_id: int, model_key: str):
     path = save_images_by_category(trainer_id, trainer_images)
     dls = set_data_loaders(path)
     export_path = f'app/models_trainer/export/{model_id}.pkl'
-    train_and_export_model(dls,export_path,model_id)
+    await train_and_export_model(dls,export_path,model_id)
     upload_to_s3(trainer_id, export_path, model_key)
 
 
@@ -47,20 +47,21 @@ async def train_and_export_model(dls, export_path: str, model_id: int):
     learn.add_cb(SaveModelCallback(every_epoch=True, with_opt=True))
     
     for epoch in range(4):
+        start_time = time.time()
         learn.fine_tune(1)
+        training_time = time.time() - start_time
         metrics = learn.validate()
-        await send_epoch_data(model_id, epoch, metrics)
+        await send_epoch_data(model_id, epoch, metrics, learn.lr, training_time)
     
     learn.export(export_path)
 
-async def send_epoch_data(model_id: str, epoch_number: int, metrics: list):
+async def send_epoch_data(model_id: str, epoch_number: int, metrics: list, learning_rate: float, training_time: float = 0.0):
     epoch_data = {
         "epochNumber": epoch_number,
         "lossValue": metrics[0].item(),
-        "accuracyValue": metrics[1].item(),
-        "valLossValue": metrics[2].item(),
-        "valAccuracyValue": metrics[3].item(),
-        "learningRate": 0.001,  
-        "timeElapsed": 0  
+        "valLossValue": metrics[1].item(),
+        "accuracyValue": metrics[2].item(),
+        "learningRate": learning_rate,  
+        "trainingTime": training_time 
     }
     await post_epoch_data(epoch_data, model_id)
