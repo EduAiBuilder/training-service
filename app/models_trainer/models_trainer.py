@@ -1,7 +1,6 @@
 from .s3 import upload_to_s3
 from .trainer_client import fetch_trainer_data, post_epoch_data
 from .classes import Trainer_images_by_category_response
-from .trainer_callback import ProgressCallback
 from fastbook import *
 from fastai.vision.all import *
 import io
