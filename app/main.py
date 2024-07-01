@@ -2,7 +2,6 @@ from fastapi import FastAPI
 import asyncio
 from app.routes.health import router as health_router
 from app.sqs_consumer import consume_sqs_messages
-import threading
 from contextlib import asynccontextmanager
 
 app = FastAPI()
@@ -16,7 +15,10 @@ async def lifespan(app: FastAPI):
     finally:
         # Cancel the task when the application shuts down
         task.cancel()
-        await task
+        try:
+            await task
+        except asyncio.CancelledError:
+            print("SQS consumer task was cancelled")
 
 app.router.lifespan_context = lifespan
 

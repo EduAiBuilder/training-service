@@ -29,14 +29,13 @@ async def process_message(message):
         model_id = body.get('modelId')
         model_key = body.get('modelKey')
         if trainer_id:
-            await main_training_process(trainer_id,model_id,model_key)
+            await main_training_process(trainer_id, model_id, model_key)
         else:
             print("trainerId not found in message")
     except Exception as e:
         print(f"Error processing message: {e}")
     finally:
         delete_message(message['ReceiptHandle'])
-   
 
 def delete_message(receipt_handle):
     client = get_sqs_client()
@@ -44,5 +43,3 @@ def delete_message(receipt_handle):
         QueueUrl=settings.sqs_queue_url,
         ReceiptHandle=receipt_handle
     )
-
-
